@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Vec2 } from "./util";
-import { Graph, GraphNode } from "../../nodelib/src/graph";
-import { Parameter } from "../../nodelib/src/node_generator";
+import { Graph, GraphNode, GraphConnection } from "../../nodelib/src/graph";
 
 const HEADER_HEIGHT = 30;
 const HEADER_MARGIN = 5;
@@ -22,11 +21,11 @@ interface ConnectionCanvasProps {
     width: number;
     height: number;
     graph: Graph;
+    currentConnection: GraphConnection;
 }
 
 interface ConnectionCanvasState {
-    x: number;
-    y: number;
+    mouse: Vec2;
 }
 
 export class ConnectionCanvas extends React.Component<
@@ -38,8 +37,7 @@ export class ConnectionCanvas extends React.Component<
     constructor(props: ConnectionCanvasProps) {
         super(props);
         this.state = {
-            x: 150,
-            y: 150,
+            mouse: { x: 0, y: 0 },
         };
     }
 
@@ -50,7 +48,7 @@ export class ConnectionCanvas extends React.Component<
         this.ctx = c.getContext("2d");
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps: ConnectionCanvasProps) {
         this.ctx.lineWidth = 4;
         this.ctx.strokeStyle = "#888";
         this.ctx.clearRect(0, 0, this.props.width, this.props.height);
@@ -66,6 +64,19 @@ export class ConnectionCanvas extends React.Component<
                     this.bezier(start, end);
                 }
             }
+        }
+        if (
+            this.props.currentConnection != null &&
+            this.props.currentConnection == prevProps.currentConnection
+        ) {
+            this.bezier(
+                calculateDotPos(
+                    this.props.currentConnection.source,
+                    this.props.currentConnection.param,
+                    false
+                ),
+                this.state.mouse
+            );
         }
     }
 
@@ -84,7 +95,13 @@ export class ConnectionCanvas extends React.Component<
         this.ctx.stroke();
     }
 
-    mouseMove() {}
+    mouseMove(e: React.MouseEvent) {
+        if (this.props.currentConnection) {
+            this.setState({
+                mouse: { x: e.clientX, y: e.clientY },
+            });
+        }
+    }
 
     render() {
         return (
@@ -101,7 +118,7 @@ export class ConnectionCanvas extends React.Component<
                     WebkitUserSelect: "none",
                     MozUserSelect: "none",
                 }}
-                onMouseMove={(e) => this.mouseMove()}
+                onMouseMove={(e) => this.mouseMove(e)}
             ></canvas>
         );
     }

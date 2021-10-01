@@ -18,6 +18,7 @@ interface GraphViewState {
     width: number;
     height: number;
     graph: NodeLib.Graph;
+    currentConnection: NodeLib.GraphConnection;
 }
 
 export class GraphView extends React.Component<{}, GraphViewState> {
@@ -27,6 +28,7 @@ export class GraphView extends React.Component<{}, GraphViewState> {
             width: 0,
             height: 0,
             graph: currentContext.graph,
+            currentConnection: null,
         };
     }
 
@@ -49,6 +51,20 @@ export class GraphView extends React.Component<{}, GraphViewState> {
         });
     }
 
+    onStartConnection(connection: NodeLib.GraphConnection) {
+        this.setState({
+            graph: this.state.graph,
+            currentConnection: connection,
+        });
+    }
+
+    onCompleteConnection() {
+        this.setState({
+            graph: this.state.graph,
+            currentConnection: null,
+        });
+    }
+
     public render() {
         return (
             <div className="graph-view">
@@ -56,6 +72,7 @@ export class GraphView extends React.Component<{}, GraphViewState> {
                     graph={this.state.graph}
                     width={this.state.width}
                     height={this.state.height}
+                    currentConnection={this.state.currentConnection}
                 />
                 {this.state.graph.nodes.map((node, index) => (
                     <NodeEl
@@ -72,6 +89,11 @@ export class GraphView extends React.Component<{}, GraphViewState> {
                                     // a permanent value
                                     key={index}
                                     name={input.display_name}
+                                    index={index}
+                                    source={node}
+                                    onCompleteConnection={() =>
+                                        this.onCompleteConnection()
+                                    }
                                 />
                             ))}
                         </NodeElLeft>
@@ -80,6 +102,11 @@ export class GraphView extends React.Component<{}, GraphViewState> {
                                 <NodeOutput
                                     key={index}
                                     name={output.display_name}
+                                    index={index}
+                                    source={node}
+                                    onStartConnection={(c) =>
+                                        this.onStartConnection(c)
+                                    }
                                 />
                             ))}
                         </NodeElRight>

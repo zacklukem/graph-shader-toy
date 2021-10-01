@@ -1,11 +1,18 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
+import { GraphConnection, GraphNode } from "../../nodelib/src";
 
 import "./NodeEl.scss";
 import { Vec2 } from "./util";
 
+let currentConnection: GraphConnection = null;
+
 interface NodeIOProps {
     name: string;
+    index: number;
+    source: GraphNode;
+    onCompleteConnection?: () => void;
+    onStartConnection?: (connection: GraphConnection) => void;
 }
 
 export class IONode extends React.Component<NodeIOProps> {
@@ -15,7 +22,11 @@ export class IONode extends React.Component<NodeIOProps> {
 }
 
 export class NodeInput extends IONode {
-    click() {}
+    click() {
+        this.props.source.inputs[this.props.index] = currentConnection;
+        if (this.props.onCompleteConnection) this.props.onCompleteConnection();
+        else console.error("Bad output");
+    }
 
     render() {
         return (
@@ -31,7 +42,16 @@ export class NodeInput extends IONode {
 }
 
 export class NodeOutput extends IONode {
-    click() {}
+    click() {
+        currentConnection = {
+            param: this.props.index,
+            source: this.props.source,
+        };
+        if (this.props.onStartConnection)
+            this.props.onStartConnection(currentConnection);
+        else console.error("Bad input");
+    }
+
     render() {
         return (
             <div className="node-el-io-el node-el-right">
